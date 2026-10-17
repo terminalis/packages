@@ -1,0 +1,67 @@
+# Builds the signed Flatpak repo from each app's newest GitHub Release and
+# deploys it with site/ to GitHub Pages, at terminalis.github.io/flatpak.
+#
+# The repo is rebuilt from scratch on every run and holds one commit per
+# app: each app's latest *_x86_64.flatpak bundle, imported and signed. Each
+# app's release workflow starts this workflow; pushes that change site/
+# redeploy it too.
+
+name: publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/publish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; don't cancel one in progress.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # GitHub repos whose latest release attaches one *_x86_64.flatpak bundle.
+  APPS: terminalis/envarsa
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/configure-pages@v6
+
+      # build-import-bundle needs an existing repo, hence ostree init.
+      - name: Build the repo from each app's newest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GPG_KEY: ${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak ostree
+          echo "$GPG_KEY" | gpg --batch --import
+          fpr=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ {print $10; exit}')
+          ostree init --mode=archive --repo=site/repo
+          for app in $APPS; do
+            dir="$RUNNER_TEMP/${app//\//_}"
+            gh release download --repo "$app" --pattern '*_x86_64.flatpak' --dir "$dir"
+            flatpak build-import-bundle --gpg-sign="$fpr" site/repo "$dir"/*_x86_64.flatpak
+          done
+          flatpak build-update-repo --gpg-sign="$fpr" --title="Terminalis" site/repo
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v5

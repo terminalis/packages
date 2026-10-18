@@ -1,11 +1,12 @@
-# Builds the signed Flatpak repo from each app's newest GitHub Release and
-# deploys it with site/ to GitHub Pages; the repo is served at
+# Publishes the signed package repositories to GitHub Pages, under
+# terminalis.github.io/packages/. Each format folder here is published at the
+# same path with its repository built into it, so flatpak/ becomes
 # terminalis.github.io/packages/flatpak.
 #
-# The repo is rebuilt from scratch on every run and holds one commit per
-# app: each app's latest *_x86_64.flatpak bundle, imported and signed. Each
-# app's release workflow starts this workflow; pushes that change site/
-# redeploy it too.
+# The Flatpak repo is rebuilt from scratch on every run and holds one commit
+# per app: each app's latest *_x86_64.flatpak bundle, imported and signed.
+# Each app's release workflow starts this workflow; pushes that change
+# flatpak/ redeploy it too.
 
 name: publish
 
@@ -13,7 +14,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'site/**'
+      - 'flatpak/**'
       - '.github/workflows/publish.yml'
   workflow_dispatch:
 
@@ -42,8 +43,10 @@ jobs:
 
       - uses: actions/configure-pages@v6
 
+      # The site is assembled in _site/. The Flatpak repo is built into a copy
+      # of flatpak/, beside its .flatpakref and .flatpakrepo files.
       # build-import-bundle needs an existing repo, hence ostree init.
-      - name: Build the repo from each app's newest release
+      - name: Build the Flatpak repo from each app's newest release
         env:
           GH_TOKEN: ${{ github.token }}
           GPG_KEY: ${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}
@@ -52,17 +55,19 @@ jobs:
           sudo apt-get install -y flatpak ostree
           echo "$GPG_KEY" | gpg --batch --import
           fpr=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ {print $10; exit}')
-          ostree init --mode=archive --repo=site/flatpak
+          mkdir _site
+          cp -r flatpak _site/
+          ostree init --mode=archive --repo=_site/flatpak
           for app in $APPS; do
             dir="$RUNNER_TEMP/${app//\//_}"
             gh release download --repo "$app" --pattern '*_x86_64.flatpak' --dir "$dir"
-            flatpak build-import-bundle --gpg-sign="$fpr" site/flatpak "$dir"/*_x86_64.flatpak
+            flatpak build-import-bundle --gpg-sign="$fpr" _site/flatpak "$dir"/*_x86_64.flatpak
           done
-          flatpak build-update-repo --gpg-sign="$fpr" --title="Terminalis" site/flatpak
+          flatpak build-update-repo --gpg-sign="$fpr" --title="Terminalis" _site/flatpak
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: site
+          path: _site
 
       - id: deployment
         uses: actions/deploy-pages@v5

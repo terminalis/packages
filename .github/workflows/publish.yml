@@ -1,5 +1,6 @@
 # Builds the signed Flatpak repo from each app's newest GitHub Release and
-# deploys it with site/ to GitHub Pages, at terminalis.github.io/flatpak.
+# deploys it with site/ to GitHub Pages; the repo is served at
+# terminalis.github.io/packages/flatpak.
 #
 # The repo is rebuilt from scratch on every run and holds one commit per
 # app: each app's latest *_x86_64.flatpak bundle, imported and signed. Each
@@ -51,13 +52,13 @@ jobs:
           sudo apt-get install -y flatpak ostree
           echo "$GPG_KEY" | gpg --batch --import
           fpr=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ {print $10; exit}')
-          ostree init --mode=archive --repo=site/repo
+          ostree init --mode=archive --repo=site/flatpak
           for app in $APPS; do
             dir="$RUNNER_TEMP/${app//\//_}"
             gh release download --repo "$app" --pattern '*_x86_64.flatpak' --dir "$dir"
-            flatpak build-import-bundle --gpg-sign="$fpr" site/repo "$dir"/*_x86_64.flatpak
+            flatpak build-import-bundle --gpg-sign="$fpr" site/flatpak "$dir"/*_x86_64.flatpak
           done
-          flatpak build-update-repo --gpg-sign="$fpr" --title="Terminalis" site/repo
+          flatpak build-update-repo --gpg-sign="$fpr" --title="Terminalis" site/flatpak
 
       - uses: actions/upload-pages-artifact@v5
         with:

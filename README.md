@@ -1,16 +1,26 @@
-# Terminalis Flatpak repository
+# Terminalis packages
 
-A signed Flatpak repository for apps by terminalis, at `https://terminalis.github.io/flatpak/repo`.
+Signed package repositories for apps by terminalis, served from `https://terminalis.github.io/packages/`. For
+now that's a Flatpak repository, at `https://terminalis.github.io/packages/flatpak`.
 
 ## Install
 
 Envarsa:
 
 ```sh
-flatpak install --user https://terminalis.github.io/flatpak/envarsa.flatpakref
+flatpak install --user https://terminalis.github.io/packages/envarsa.flatpakref
 ```
 
 New versions then arrive through `flatpak update` and software centers such as GNOME Software and KDE Discover.
+
+To add the repository without installing an app, so software centers list every app in it:
+
+```sh
+flatpak remote-add --user --if-not-exists terminalis https://terminalis.github.io/packages/terminalis.flatpakrepo
+```
+
+The apps use runtimes from Flathub, so that needs the Flathub remote too. An app's `.flatpakref` adds it by
+itself.
 
 ## How it works
 

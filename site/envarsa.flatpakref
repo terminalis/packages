@@ -2,7 +2,7 @@
 Title=Envarsa
 Name=io.github.terminalis.Envarsa
 Branch=master
-Url=https://terminalis.github.io/flatpak/repo
+Url=https://terminalis.github.io/packages/flatpak
 SuggestRemoteName=terminalis
 RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
 IsRuntime=false

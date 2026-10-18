@@ -1,7 +1,7 @@
 # Terminalis packages
 
-Signed package repositories for apps by terminalis, served from `https://terminalis.github.io/packages/`. For
-now that's a Flatpak repository, at `https://terminalis.github.io/packages/flatpak`.
+Signed package repositories for apps by terminalis. For now that's a Flatpak repository, at
+`https://terminalis.github.io/packages/flatpak`.
 
 ## Install
 

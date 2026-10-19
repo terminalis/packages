@@ -10,6 +10,12 @@ Envarsa:
 flatpak install --user https://terminalis.github.io/packages/flatpak/envarsa.flatpakref
 ```
 
+Gittin:
+
+```sh
+flatpak install --user https://terminalis.github.io/packages/flatpak/gittin.flatpakref
+```
+
 New versions then arrive through `flatpak update` and software centers such as GNOME Software and KDE Discover.
 
 To add the Flatpak repository without installing an app, so software centers list every app in it:

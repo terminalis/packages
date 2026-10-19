@@ -30,7 +30,7 @@ concurrency:
 
 env:
   # GitHub repos whose latest release attaches one *_x86_64.flatpak bundle.
-  APPS: terminalis/envarsa
+  APPS: terminalis/envarsa terminalis/gittin
 
 jobs:
   publish:
